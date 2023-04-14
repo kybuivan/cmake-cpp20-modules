@@ -30,3 +30,15 @@
 *.exe
 *.out
 *.app
+
+# cmake
+CMakeCache.txt
+CMakeFiles
+MakeFile
+DartConfiguration.tcl
+
+# build
+build/
+
+#vscode
+.vscode

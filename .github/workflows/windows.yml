@@ -1,0 +1,44 @@
+name: windows
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [windows-2022]
+        platform: [x64]
+        toolset: [v143]
+        standard: [20]
+        shared: ["", -DBUILD_SHARED_LIBS=OFF]
+        build_type: [Debug, Release]
+        exclude:
+            - { platform: x64, standard: 20, shared: -DBUILD_SHARED_LIBS=OFF }
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{runner.workspace}}/build
+
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{runner.workspace}}/build
+      run: |
+        cmake -Wno-dev -A ${{matrix.platform}} -T ${{matrix.toolset}} \
+              -DCMAKE_CXX_STANDARD=${{matrix.standard}} \
+              ${{matrix.shared}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+              $GITHUB_WORKSPACE
+    - name: Install Jinja2 for glad2
+      run: pip install Jinja2
+    
+    - name: Build
+      working-directory: ${{runner.workspace}}/build
+      run: |
+        $threads = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
+        cmake --build . --config ${{matrix.build_type}} --parallel $threads
